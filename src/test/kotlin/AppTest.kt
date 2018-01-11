@@ -19,7 +19,7 @@ import spark.Spark
 
 class RequestHandler {
     private val httpClient = HttpClients.custom().build()
-    private val serverHost = "http://localhost"
+    private val serverHost = "localhost"
     private val serverPort = "8080"
 
     fun get(path:String) :HttpResponse {
@@ -29,7 +29,7 @@ class RequestHandler {
     }
 
     private fun url():String {
-        return serverHost + ":" + serverPort
+        return "http://$serverHost:$serverPort"
     }
 
 
