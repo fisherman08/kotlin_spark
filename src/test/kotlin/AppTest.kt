@@ -28,19 +28,22 @@ class SparkTest {
         return serverHost + ":" + serverPort
     }
 
-    private fun get(path:String):HttpResponse{
+    private fun get(path:String) :HttpResponse {
         val httpGet = HttpGet(url() + path)
         return httpClient.execute(httpGet)
     }
 
     @Before
     fun setup() {
+        // Appを起動
         main(Array(0, {_ -> ""}))
+        Thread.sleep(1500)
     }
 
     @After
     @Throws(Exception::class)
     fun tearDown() {
+        // Appを停止
         Thread.sleep(1000)
         Spark.stop()
     }
@@ -55,10 +58,12 @@ class SparkTest {
 
         val result = StringBuffer()
         var line = rd.readLine()
-        while (line != null) {
+
+        do {
             result.append(line)
             line = rd.readLine()
-        }
+
+        } while (line != null)
 
         assertEquals(200, statusCode)
         assertEquals("Hello World!", result.toString())
