@@ -17,21 +17,26 @@ import org.apache.http.impl.client.HttpClients
 import org.junit.Test
 import spark.Spark
 
-class SparkTest {
-
+class RequestHandler {
     private val httpClient = HttpClients.custom().build()
     private val serverHost = "http://localhost"
     private val serverPort = "8080"
 
+    fun get(path:String) :HttpResponse {
+        val httpGet = HttpGet(url() + path)
+        val response = httpClient.execute(httpGet)
+        return response
+    }
 
     private fun url():String {
         return serverHost + ":" + serverPort
     }
 
-    private fun get(path:String) :HttpResponse {
-        val httpGet = HttpGet(url() + path)
-        return httpClient.execute(httpGet)
-    }
+
+}
+class SparkTest {
+
+    private val handler = RequestHandler()
 
     @Before
     fun setup() {
@@ -51,7 +56,7 @@ class SparkTest {
     @Test
     @Throws(IOException::class)
     fun testRooting() {
-        val response = get("/")
+        val response = handler.get("/")
 
         val statusCode = response.statusLine.statusCode
         val rd = BufferedReader(InputStreamReader(response.entity.content))
