@@ -3,18 +3,15 @@
  * Created on 2018/01/10.
  */
 
-import org.junit.After
-import org.junit.Before
-
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
 
-import junit.framework.TestCase.assertEquals
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
-import org.junit.Test
+import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.*
+import org.junit.jupiter.api.Assertions.*
 import spark.Spark
 
 class RequestHandler {
@@ -32,45 +29,64 @@ class RequestHandler {
         return "http://$serverHost:$serverPort"
     }
 
+    fun execGet(path :String) :HashMap<String, String>{
+        val result = HashMap<String, String>()
 
-}
-class SparkTest {
-
-    private val handler = RequestHandler()
-
-    @Before
-    fun setup() {
-        // Appを起動
-        main(Array(0, {_ -> ""}))
-        Thread.sleep(1500)
-    }
-
-    @After
-    @Throws(Exception::class)
-    fun tearDown() {
-        // Appを停止
-        Thread.sleep(1000)
-        Spark.stop()
-    }
-
-    @Test
-    @Throws(IOException::class)
-    fun testRooting() {
-        val response = handler.get("/")
-
+        val response = get(path)
         val statusCode = response.statusLine.statusCode
         val rd = BufferedReader(InputStreamReader(response.entity.content))
 
-        val result = StringBuffer()
+        val body = StringBuffer()
         var line = rd.readLine()
 
         do {
-            result.append(line)
+            body.append(line)
             line = rd.readLine()
 
         } while (line != null)
 
-        assertEquals(200, statusCode)
-        assertEquals("Hello World!", result.toString())
+        result["statusCode"] = statusCode.toString()
+        result["responseBody"] = body.toString()
+
+        return result
     }
+
 }
+object SparkTest : Spek({
+    val handler = RequestHandler()
+
+    given("rooting") {
+
+        beforeGroup {
+            // Appを起動
+            main(Array(0, {_ -> ""}))
+            Thread.sleep(1500)
+        }
+
+        afterGroup {
+            // Appを停止
+            Thread.sleep(1000)
+            Spark.stop()
+        }
+
+        on("/") {
+            val response = handler.execGet("/")
+
+            it("should return valid response"){
+                assertEquals("200", response["statusCode"])
+                assertEquals("Hello World!", response["responseBody"])
+            }
+
+        }
+
+        on("/template") {
+            val response = handler.execGet("/template")
+
+            it("should return valid response"){
+                assertEquals("200", response["statusCode"])
+                assertTrue(response["responseBody"].toString().contains("suzuki"))
+            }
+
+        }
+    }
+})
